@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartPark — IoT-Based Smart Parking System</title>
+<style>
+:root {
+--teal: #00C9B1; --cyan: #00D4FF; --purple: #7B2FBE; --orange: #FF6B35;
+--pink: #FF2D78; --yellow: #FFD700; --green: #00E676; --dark: #0A0E2A;
+--card: #111433; --card2: #0D1535; --white: #ffffff; --muted: #94A3B8;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--dark); color: var(--white); overflow-x: hidden; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--dark); }
+::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+/* NAV */
+nav {
+position: fixed; top: 0; width: 100%; z-index: 1000;
+background: rgba(10,14,42,0.92); backdrop-filter: blur(16px);
+border-bottom: 1px solid rgba(0,201,177,0.2);
+padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px;
+}
+.nav-logo { font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, var(--teal), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a { color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: color .3s; }
+.nav-links a:hover { color: var(--teal); }
+.nav-cta { background: linear-gradient(135deg, var(--teal), var(--cyan)); border: none; color: var(--dark); padding: 0.5rem 1.25rem; border-radius: 50px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: opacity .3s; }
+.nav-cta:hover { opacity: 0.85; }
+.hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+.hamburger span { width: 24px; height: 2px; background: var(--teal); border-radius: 2px; transition: all .3s; }
+
+/* HERO */
+#hero {
+min-height: 100vh; display: flex; align-items: center; justify-content: center;
+position: relative; overflow: hidden; padding: 6rem 2rem 4rem;
+background: radial-gradient(ellipse at 20% 50%, rgba(0,201,177,0.08) 0%, transparent 60%),
+          radial-gradient(ellipse at 80% 20%, rgba(123,47,190,0.1) 0%, transparent 50%),
+          radial-gradient(ellipse at 60% 80%, rgba(0,212,255,0.06) 0%, transparent 50%);
+}
+.hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; max-width: 1200px; width: 100%; align-items: center; }
+.hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,201,177,0.12); border: 1px solid rgba(0,201,177,0.3); color: var(--teal); padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600; margin-bottom: 1.5rem; }
+.hero-badge .dot { width: 8px; height: 8px; background: var(--teal); border-radius: 50%; animation: pulse 2s infinite; }
+.hero-title { font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.25rem; }
+.hero-title .grad { background: linear-gradient(135deg, var(--teal), var(--cyan), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-sub { color: var(--muted); font-size: 1.05rem; line-height: 1.7; margin-bottom: 2rem; }
+.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn-primary { background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--dark); padding: 0.8rem 1.8rem; border-radius: 50px; font-weight: 700; text-decoration: none; font-size: 0.95rem; transition: transform .2s, box-shadow .2s; display: inline-block; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,201,177,0.4); }
+.btn-secondary { background: transparent; border: 1.5px solid rgba(0,201,177,0.4); color: var(--teal); padding: 0.8rem 1.8rem; border-radius: 50px; font-weight: 600; text-decoration: none; font-size: 0.95rem; transition: all .2s; display: inline-block; }
+.btn-secondary:hover { background: rgba(0,201,177,0.08); border-color: var(--teal); }
+.hero-chips { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 2rem; }
+.chip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; color: var(--muted); }
+
+/* HERO VISUAL */
+.hero-visual { position: relative; display: flex; align-items: center; justify-content: center; }
+.parking-demo { width: 100%; max-width: 420px; background: var(--card); border-radius: 24px; border: 1px solid rgba(0,201,177,0.2); overflow: hidden; box-shadow: 0 0 60px rgba(0,201,177,0.1); }
+.demo-header { background: linear-gradient(135deg, rgba(0,201,177,0.15), rgba(0,212,255,0.1)); padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(0,201,177,0.15); display: flex; align-items: center; gap: 0.75rem; }
+.demo-dots { display: flex; gap: 6px; }
+.demo-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.demo-dots .r { background: #FF5F57; } .demo-dots .y { background: #FEBC2E; } .demo-dots .g { background: #28C840; }
+.demo-title-bar { font-size: 0.8rem; color: var(--muted); flex: 1; text-align: center; }
+.slot-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; padding: 1.25rem; }
+.slot { border-radius: 12px; padding: 0.9rem; text-align: center; cursor: pointer; transition: all .3s; position: relative; }
+.slot.free { background: rgba(0,230,118,0.1); border: 1.5px solid rgba(0,230,118,0.4); }
+.slot.occ { background: rgba(255,45,120,0.1); border: 1.5px solid rgba(255,45,120,0.4); }
+.slot.booked { background: rgba(255,215,0,0.1); border: 1.5px solid rgba(255,215,0,0.4); }
+.slot-icon { font-size: 1.4rem; margin-bottom: 0.3rem; }
+.slot-id { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; }
+.slot-status { font-size: 0.65rem; margin-top: 0.2rem; }
+.slot.free .slot-id { color: var(--green); } .slot.free .slot-status { color: rgba(0,230,118,0.7); }
+.slot.occ .slot-id { color: var(--pink); } .slot.occ .slot-status { color: rgba(255,45,120,0.7); }
+.slot.booked .slot-id { color: var(--yellow); } .slot.booked .slot-status { color: rgba(255,215,0,0.7); }
+.demo-footer { padding: 0.9rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; }
+.demo-stat { text-align: center; }
+.demo-stat .val { font-size: 1.2rem; font-weight: 800; color: var(--teal); }
+.demo-stat .lbl { font-size: 0.65rem; color: var(--muted); }
+.live-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; color: var(--green); }
+.live-badge .dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+
+/* STATS BAND */
+.stats-band { background: linear-gradient(135deg, rgba(0,201,177,0.08), rgba(123,47,190,0.08)); border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06); padding: 3rem 2rem; }
+.stats-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center; }
+.stat-item .num { font-size: 2.4rem; font-weight: 900; background: linear-gradient(135deg, var(--teal), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-item .desc { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+
+/* SECTIONS */
+section { padding: 5rem 2rem; }
+.section-inner { max-width: 1200px; margin: 0 auto; }
+.section-tag { font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 0.75rem; }
+.section-title { font-size: clamp(1.8rem, 3.5vw, 2.6rem); font-weight: 800; line-height: 1.2; margin-bottom: 1rem; }
+.section-sub { color: var(--muted); font-size: 1rem; line-height: 1.7; max-width: 600px; margin-bottom: 3rem; }
+
+/* PROBLEM */
+#problem { background: linear-gradient(180deg, var(--dark) 0%, rgba(17,20,51,0.8) 100%); }
+.problem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 3rem; }
+.prob-card { background: var(--card); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255,45,120,0.2); text-align: center; transition: transform .3s; }
+.prob-card:hover { transform: translateY(-4px); border-color: rgba(255,45,120,0.5); }
+.prob-num { font-size: 2.2rem; font-weight: 900; color: var(--pink); margin-bottom: 0.4rem; }
+.prob-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+.consequences { background: rgba(255,45,120,0.05); border: 1px solid rgba(255,45,120,0.15); border-radius: 16px; padding: 2rem; }
+.consequences h3 { color: var(--pink); font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; }
+.cons-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.cons-item { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.875rem; color: #CBD5E1; }
+.cons-item::before { content: "→"; color: var(--pink); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+/* SOLUTION */
+#solution { background: linear-gradient(180deg, rgba(0,201,177,0.03), var(--dark)); }
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+.step-card { background: var(--card); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(0,201,177,0.15); position: relative; overflow: hidden; transition: all .3s; }
+.step-card:hover { border-color: rgba(0,201,177,0.4); transform: translateY(-4px); }
+.step-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
+.step-card:nth-child(1)::before { background: var(--teal); }
+.step-card:nth-child(2)::before { background: var(--cyan); }
+.step-card:nth-child(3)::before { background: var(--purple); }
+.step-card:nth-child(4)::before { background: var(--orange); }
+.step-card:nth-child(5)::before { background: var(--pink); }
+.step-card:nth-child(6)::before { background: var(--yellow); }
+.step-num { font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; color: var(--muted); margin-bottom: 0.5rem; }
+.step-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+.step-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--teal); }
+.step-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+/* ARCHITECTURE */
+#architecture { background: var(--dark); }
+.arch-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; margin-bottom: 2.5rem; }
+.arch-layer { background: var(--card); border: 1px solid rgba(255,255,255,0.07); padding: 1.75rem 1.25rem; text-align: center; position: relative; }
+.arch-layer:first-child { border-radius: 16px 0 0 16px; }
+.arch-layer:last-child { border-radius: 0 16px 16px 0; }
+.arch-layer::after { content: '→'; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); font-size: 1.2rem; color: var(--teal); z-index: 2; font-weight: 700; }
+.arch-layer:last-child::after { display: none; }
+.arch-layer:nth-child(1) { border-top: 3px solid var(--pink); }
+.arch-layer:nth-child(2) { border-top: 3px solid var(--orange); }
+.arch-layer:nth-child(3) { border-top: 3px solid var(--cyan); }
+.arch-layer:nth-child(4) { border-top: 3px solid var(--green); }
+.arch-layer-title { font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 1rem; }
+.arch-layer:nth-child(1) .arch-layer-title { color: var(--pink); }
+.arch-layer:nth-child(2) .arch-layer-title { color: var(--orange); }
+.arch-layer:nth-child(3) .arch-layer-title { color: var(--cyan); }
+.arch-layer:nth-child(4) .arch-layer-title { color: var(--green); }
+.arch-item { font-size: 0.8rem; color: var(--muted); padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.arch-item:last-child { border-bottom: none; }
+.arch-tagline { text-align: center; background: rgba(0,201,177,0.08); border: 1px solid rgba(0,201,177,0.2); border-radius: 50px; padding: 0.75rem 2rem; font-size: 0.85rem; color: var(--teal); font-weight: 600; display: inline-block; }
+.arch-tagline-wrap { text-align: center; }
+
+/* FLOW */
+#flow { background: linear-gradient(180deg, var(--dark), rgba(17,20,51,0.9)); }
+.flow-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+.flow-step { background: var(--card); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.07); display: flex; gap: 1rem; align-items: flex-start; transition: all .3s; }
+.flow-step:hover { border-color: rgba(0,201,177,0.3); transform: translateY(-3px); }
+.flow-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; flex-shrink: 0; }
+.flow-step:nth-child(1) .flow-num { background: rgba(0,201,177,0.15); color: var(--teal); border: 1.5px solid var(--teal); }
+.flow-step:nth-child(2) .flow-num { background: rgba(0,212,255,0.15); color: var(--cyan); border: 1.5px solid var(--cyan); }
+.flow-step:nth-child(3) .flow-num { background: rgba(123,47,190,0.15); color: var(--purple); border: 1.5px solid var(--purple); }
+.flow-step:nth-child(4) .flow-num { background: rgba(255,107,53,0.15); color: var(--orange); border: 1.5px solid var(--orange); }
+.flow-step:nth-child(5) .flow-num { background: rgba(255,45,120,0.15); color: var(--pink); border: 1.5px solid var(--pink); }
+.flow-step:nth-child(6) .flow-num { background: rgba(0,230,118,0.15); color: var(--green); border: 1.5px solid var(--green); }
+.flow-body .flow-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.35rem; }
+.flow-body .flow-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+/* TECH STACK */
+#tech { background: var(--dark); }
+.tech-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+.tech-card { background: var(--card); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.07); transition: all .3s; }
+.tech-card:hover { transform: translateY(-4px); }
+.tech-card:nth-child(1) { border-top: 3px solid var(--orange); }
+.tech-card:nth-child(2) { border-top: 3px solid var(--purple); }
+.tech-card:nth-child(3) { border-top: 3px solid var(--cyan); }
+.tech-card:nth-child(4) { border-top: 3px solid var(--green); }
+.tech-cat { font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 1rem; }
+.tech-card:nth-child(1) .tech-cat { color: var(--orange); }
+.tech-card:nth-child(2) .tech-cat { color: var(--purple); }
+.tech-card:nth-child(3) .tech-cat { color: var(--cyan); }
+.tech-card:nth-child(4) .tech-cat { color: var(--green); }
+.tech-list { list-style: none; }
+.tech-list li { font-size: 0.85rem; color: var(--muted); padding: 0.45rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 0.5rem; }
+.tech-list li:last-child { border-bottom: none; }
+.tech-list li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.tech-card:nth-child(1) .tech-list li::before { background: var(--orange); }
+.tech-card:nth-child(2) .tech-list li::before { background: var(--purple); }
+.tech-card:nth-child(3) .tech-list li::before { background: var(--cyan); }
+.tech-card:nth-child(4) .tech-list li::before { background: var(--green); }
+
+/* ADVANTAGES */
+#advantages { background: linear-gradient(180deg, var(--dark), rgba(0,201,177,0.03)); }
+.adv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+.adv-card { background: var(--card); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.07); display: flex; gap: 1rem; align-items: flex-start; transition: all .3s; }
+.adv-card:hover { transform: translateY(-4px); border-color: rgba(0,201,177,0.25); }
+.adv-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+.adv-icon.high { background: rgba(0,230,118,0.12); }
+.adv-icon.med { background: rgba(0,212,255,0.12); }
+.adv-body .adv-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; }
+.adv-body .adv-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+.adv-impact { display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 50px; margin-top: 0.5rem; }
+.impact-high { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+.impact-med { background: rgba(0,212,255,0.15); color: var(--cyan); border: 1px solid rgba(0,212,255,0.3); }
+
+/* FEATURES */
+#features { background: var(--dark); }
+.feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+.feat-card { background: var(--card); border-radius: 16px; padding: 1.25rem; border: 1px solid rgba(255,255,255,0.07); text-align: center; transition: all .3s; }
+.feat-card:hover { transform: translateY(-4px); border-color: rgba(123,47,190,0.4); }
+.feat-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+.feat-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.4rem; }
+.feat-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+/* OWNER PORTAL */
+#owner { background: linear-gradient(180deg, rgba(123,47,190,0.05), var(--dark)); }
+.owner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; }
+.owner-steps { display: flex; flex-direction: column; gap: 1rem; }
+.owner-step { background: var(--card); border-radius: 14px; padding: 1.25rem 1.5rem; border: 1px solid rgba(123,47,190,0.15); display: flex; gap: 1rem; align-items: flex-start; transition: all .3s; }
+.owner-step:hover { border-color: rgba(123,47,190,0.4); }
+.owner-step-num { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), #9B59B6); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; flex-shrink: 0; }
+.owner-step-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.2rem; }
+.owner-step-desc { font-size: 0.8rem; color: var(--muted); }
+.pricing-card { background: var(--card); border-radius: 20px; padding: 2rem; border: 1px solid rgba(123,47,190,0.25); }
+.pricing-card h3 { color: var(--purple); font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; letter-spacing: 1px; text-transform: uppercase; font-size: 0.75rem; }
+.price-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.price-item:last-child { border-bottom: none; }
+.price-label { font-size: 0.85rem; color: var(--muted); }
+.price-val { font-size: 0.85rem; font-weight: 700; color: var(--white); }
+
+/* ROADMAP */
+#roadmap { background: var(--dark); }
+.roadmap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+.road-card { background: var(--card); border-radius: 16px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.07); transition: all .3s; }
+.road-card:hover { transform: translateY(-4px); }
+.road-phase { font-size: 0.65rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; }
+.road-card:nth-child(1) .road-phase, .road-card:nth-child(2) .road-phase { color: var(--teal); }
+.road-card:nth-child(3) .road-phase, .road-card:nth-child(4) .road-phase { color: var(--cyan); }
+.road-card:nth-child(5) .road-phase, .road-card:nth-child(6) .road-phase { color: var(--purple); }
+.road-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.road-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+.road-badge { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; padding: 0.2rem 0.75rem; border-radius: 50px; font-size: 0.65rem; font-weight: 700; }
+.road-card:nth-child(1) .road-badge, .road-card:nth-child(2) .road-badge { background: rgba(0,201,177,0.12); color: var(--teal); border: 1px solid rgba(0,201,177,0.25); }
+.road-card:nth-child(3) .road-badge, .road-card:nth-child(4) .road-badge { background: rgba(0,212,255,0.12); color: var(--cyan); border: 1px solid rgba(0,212,255,0.25); }
+.road-card:nth-child(5) .road-badge, .road-card:nth-child(6) .road-badge { background: rgba(123,47,190,0.12); color: #B39DDB; border: 1px solid rgba(123,47,190,0.25); }
+
+/* INTERACTIVE DEMO */
+#demo { background: linear-gradient(135deg, rgba(0,201,177,0.05), rgba(123,47,190,0.05)); }
+.demo-container { background: var(--card); border-radius: 24px; border: 1px solid rgba(0,201,177,0.15); padding: 2.5rem; max-width: 900px; margin: 0 auto; }
+.demo-tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; background: rgba(0,0,0,0.3); padding: 0.3rem; border-radius: 12px; }
+.demo-tab { padding: 0.6rem 1.25rem; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all .3s; color: var(--muted); background: transparent; border: none; }
+.demo-tab.active { background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--dark); }
+.demo-panel { display: none; }
+.demo-panel.active { display: block; }
+
+/* Slot simulator */
+.sim-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; }
+.sim-slot { background: rgba(0,230,118,0.08); border: 2px solid rgba(0,230,118,0.3); border-radius: 10px; padding: 0.9rem 0.5rem; text-align: center; cursor: pointer; transition: all .25s; }
+.sim-slot.occupied { background: rgba(255,45,120,0.08); border-color: rgba(255,45,120,0.3); }
+.sim-slot.selected { background: rgba(255,215,0,0.12); border-color: var(--yellow); }
+.sim-slot-id { font-size: 0.75rem; font-weight: 700; }
+.sim-slot.free .sim-slot-id { color: var(--green); }
+.sim-slot.occupied .sim-slot-id { color: var(--pink); }
+.sim-slot.selected .sim-slot-id { color: var(--yellow); }
+.sim-slot-ico { font-size: 1.2rem; }
+.sim-info { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; background: rgba(0,0,0,0.25); border-radius: 12px; }
+.sim-legend { display: flex; gap: 1.25rem; }
+.leg-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--muted); }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* Booking panel */
+.book-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.form-group label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.form-group select, .form-group input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: var(--white); padding: 0.6rem 0.85rem; border-radius: 10px; font-size: 0.85rem; outline: none; transition: border-color .2s; }
+.form-group select:focus, .form-group input:focus { border-color: var(--teal); }
+.form-group option { background: var(--card); }
+.book-total { background: rgba(0,201,177,0.08); border: 1px solid rgba(0,201,177,0.2); border-radius: 12px; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+.book-total .amount { font-size: 1.5rem; font-weight: 900; color: var(--teal); }
+.book-btn { margin-top: 1rem; width: 100%; padding: 0.85rem; background: linear-gradient(135deg, var(--teal), var(--cyan)); border: none; color: var(--dark); font-weight: 800; font-size: 1rem; border-radius: 12px; cursor: pointer; transition: all .3s; }
+.book-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,201,177,0.35); }
+.book-success { display: none; text-align: center; padding: 2rem; }
+.book-success h3 { font-size: 1.4rem; color: var(--green); margin-bottom: 0.5rem; }
+.book-success p { color: var(--muted); }
+.qr-box { width: 80px; height: 80px; background: white; margin: 1rem auto; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+
+/* FOOTER */
+footer { background: rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.06); padding: 3rem 2rem; text-align: center; }
+.footer-logo { font-size: 1.8rem; font-weight: 900; background: linear-gradient(135deg, var(--teal), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.75rem; }
+.footer-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .footer-tags { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .footer-tag { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--muted); padding: 0.3rem 0.85rem; border-radius: 50px; font-size: 0.75rem; }
+  .footer-copy { font-size: 0.8rem; color: rgba(148,163,184,0.5); }
+
+  /* ANIMATIONS */
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.85)} }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  .fade-in { opacity: 0; transform: translateY(24px); transition: all 0.6s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+  .hero-visual { animation: float 6s ease-in-out infinite; }
+
+  /* MOBILE */
+  @media(max-width:900px) {
+    .hero-grid { grid-template-columns: 1fr; text-align: center; }
+    .hero-btns { justify-content: center; }
+    .hero-chips { justify-content: center; }
+    .hero-visual { max-width: 340px; margin: 0 auto; }
+    .stats-inner, .problem-grid, .steps-grid, .tech-grid, .flow-steps, .adv-grid, .feat-grid, .roadmap-grid { grid-template-columns: 1fr 1fr; }
+    .arch-flow { grid-template-columns: 1fr 1fr; }
+    .arch-layer { border-radius: 0; }
+    .arch-layer::after { display: none; }
+    .owner-grid { grid-template-columns: 1fr; }
+    .book-form { grid-template-columns: 1fr; }
+    .sim-grid { grid-template-columns: repeat(3, 1fr); }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+  }
+  @media(max-width:600px) {
+    .stats-inner, .problem-grid, .steps-grid, .tech-grid, .flow-steps, .adv-grid, .feat-grid, .roadmap-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">SmartPark</div>
+  <ul class="nav-links">
+    <li><a href="#problem">Problem</a></li>
+    <li><a href="#solution">Solution</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#tech">Tech Stack</a></li>
+    <li><a href="#demo">Live Demo</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">Try Demo</button>
+  <div class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-badge"><span class="dot"></span>Hackathon 2025 — Smart Cities</div>
+      <h1 class="hero-title">IoT-Based <span class="grad">Smart Parking</span> System</h1>
+      <p class="hero-sub">Solving urban congestion with real-time sensor intelligence, instant QR gate access, and AI-ready cloud booking for modern cities.</p>
+      <div class="hero-btns">
+        <a href="#demo" class="btn-primary">Live Demo</a>
+        <a href="#solution" class="btn-secondary">How It Works</a>
+      </div>
+      <div class="hero-chips">
+        <span class="chip">ESP8266 NodeMCU</span>
+        <span class="chip">HC-SR04 Ultrasonic</span>
+        <span class="chip">QR Entry/Exit</span>
+        <span class="chip">React Native</span>
+        <span class="chip">Firebase</span>
+        <span class="chip">MQTT</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="parking-demo">
+        <div class="demo-header">
+          <div class="demo-dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+          <div class="demo-title-bar">SmartPark Live Map</div>
+        </div>
+        <div class="slot-grid" id="heroSlots"></div>
+        <div class="demo-footer">
+          <div class="demo-stat"><div class="val" id="freeCount">4</div><div class="lbl">Free Slots</div></div>
+          <div class="live-badge"><span class="dot"></span>Live</div>
+          <div class="demo-stat"><div class="val" id="occCount">2</div><div class="lbl">Occupied</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-band">
+  <div class="stats-inner">
+    <div class="stat-item fade-in"><div class="num">30%</div><div class="desc">of city traffic searching for parking</div></div>
+    <div class="stat-item fade-in"><div class="num">17 min</div><div class="desc">average wasted per trip finding a spot</div></div>
+    <div class="stat-item fade-in"><div class="num">₹2400 Cr</div><div class="desc">annual fuel waste in India</div></div>
+    <div class="stat-item fade-in"><div class="num">&lt;500ms</div><div class="desc">real-time data refresh latency</div></div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="section-inner">
+    <div class="section-tag fade-in">The Problem</div>
+    <h2 class="section-title fade-in">Urban Parking Crisis</h2>
+    <p class="section-sub fade-in">Why cities are choking on parked cars and why it demands an immediate IoT-powered solution.</p>
+    <div class="problem-grid fade-in">
+      <div class="prob-card"><div class="prob-num">30%</div><div class="prob-desc">of city traffic is cars searching for parking spots</div></div>
+      <div class="prob-card"><div class="prob-num">17 min</div><div class="prob-desc">average time wasted finding a single parking spot</div></div>
+      <div class="prob-card"><div class="prob-num">₹2400 Cr</div><div class="prob-desc">annual fuel waste due to parking search in India</div></div>
+      <div class="prob-card"><div class="prob-num">4.5%</div><div class="prob-desc">of urban land consumed by surface parking</div></div>
+    </div>
+    <div class="consequences fade-in">
+      <h3>Road Parking — Real Consequences</h3>
+      <div class="cons-list">
+        <div class="cons-item">Vehicles illegally parked reduce lane width by 30–50%</div>
+        <div class="cons-item">Double parking causes complete blockage and chain jams</div>
+        <div class="cons-item">Idling creates dangerous CO₂ &amp; NO₂ emissions</div>
+        <div class="cons-item">Emergency vehicles blocked by illegal road parking</div>
+        <div class="cons-item">India loses ₹1.5 lakh crore/year in traffic productivity</div>
+        <div class="cons-item">Constant honking exceeds 90dB safe noise limits</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section id="solution">
+  <div class="section-inner">
+    <div class="section-tag fade-in">Our Solution</div>
+    <h2 class="section-title fade-in">SmartPark — End-to-End IoT Intelligence</h2>
+    <p class="section-sub fade-in">A complete 6-step flow from sensor to smartphone, automating every touchpoint of the parking experience.</p>
+    <div class="steps-grid">
+      <div class="step-card fade-in"><div class="step-num">STEP 01</div><div class="step-icon">📡</div><div class="step-title">Sense</div><div class="step-desc">HC-SR04 ultrasonic sensors on ESP8266 detect vehicle presence in real-time with precision accuracy.</div></div>
+      <div class="step-card fade-in"><div class="step-num">STEP 02</div><div class="step-icon">🌐</div><div class="step-title">Connect</div><div class="step-desc">NodeMCU transmits data via Wi-Fi to cloud server instantly using MQTT/HTTP protocol.</div></div>
+      <div class="step-card fade-in"><div class="step-num">STEP 03</div><div class="step-icon">🗺️</div><div class="step-title">Display</div><div class="step-desc">Mobile &amp; web app shows real-time slot availability on a live colour-coded map (green/red).</div></div>
+      <div class="step-card fade-in"><div class="step-num">STEP 04</div><div class="step-icon">📅</div><div class="step-title">Book</div><div class="step-desc">Users reserve nearest vacant slot with upfront pricing — up to 7 days in advance.</div></div>
+      <div class="step-card fade-in"><div class="step-num">STEP 05</div><div class="step-icon">🔲</div><div class="step-title">Enter</div><div class="step-desc">QR code scanned at main gate entrance — servo barrier opens automatically for booked vehicles.</div></div>
+      <div class="step-card fade-in"><div class="step-num">STEP 06</div><div class="step-icon">💳</div><div class="step-title">Pay &amp; Exit</div><div class="step-desc">Payment gateway processes fee; second QR scan opens the exit barrier. LED turns GREEN.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <div class="section-inner">
+    <div class="section-tag fade-in">System Architecture</div>
+    <h2 class="section-title fade-in">End-to-End Data Flow</h2>
+    <p class="section-sub fade-in">From physical sensor to smartphone notification in under 500 milliseconds.</p>
+    <div class="arch-flow fade-in">
+      <div class="arch-layer">
+        <div class="arch-layer-title">Physical Layer</div>
+        <div class="arch-item">HC-SR04 Sensors</div>
+        <div class="arch-item">LED Indicators</div>
+        <div class="arch-item">Entry/Exit Gate</div>
+        <div class="arch-item">Servo Motor</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">Edge Layer</div>
+        <div class="arch-item">ESP8266 NodeMCU</div>
+        <div class="arch-item">Firmware Logic</div>
+        <div class="arch-item">Wi-Fi Uplink</div>
+        <div class="arch-item">MQTT Client</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">Cloud Layer</div>
+        <div class="arch-item">REST API Server</div>
+        <div class="arch-item">Firebase / MQTT</div>
+        <div class="arch-item">MongoDB Database</div>
+        <div class="arch-item">Socket.io Real-time</div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">App Layer</div>
+        <div class="arch-item">React Native App</div>
+        <div class="arch-item">Web Dashboard</div>
+        <div class="arch-item">Owner Portal</div>
+        <div class="arch-item">Push Notifications</div>
+      </div>
+    </div>
+    <div class="arch-tagline-wrap fade-in">
+      <span class="arch-tagline">Sensor → NodeMCU → MQTT/HTTP → Cloud DB → App — all in &lt;500ms</span>
+    </div>
+  </div>
+</section>
+
+<!-- BOOKING FLOW -->
+<section id="flow">
+  <div class="section-inner">
+    <div class="section-tag fade-in">Booking System</div>
+    <h2 class="section-title fade-in">QR Gate Flow</h2>
+    <p class="section-sub fade-in">From app booking to gate entry and payment exit — fully automated and frictionless.</p>
+    <div class="flow-steps">
+      <div class="flow-step fade-in"><div class="flow-num">01</div><div class="flow-body"><div class="flow-title">Search &amp; Find</div><div class="flow-desc">User opens app → sees nearest lots with live vacancy count and price/hr displayed on map.</div></div></div>
+      <div class="flow-step fade-in"><div class="flow-num">02</div><div class="flow-body"><div class="flow-title">Select &amp; Book</div><div class="flow-desc">Tap on slot → view amount &amp; duration → Confirm Booking with payment pre-authorization.</div></div></div>
+      <div class="flow-step fade-in"><div class="flow-num">03</div><div class="flow-body"><div class="flow-title">QR Generated</div><div class="flow-desc">System generates a unique time-bound QR code for the reserved slot instantly.</div></div></div>
+      <div class="flow-step fade-in"><div class="flow-num">04</div><div class="flow-body"><div class="flow-title">Gate Entry</div><div class="flow-desc">QR scanner at entrance reads code → servo barrier opens → slot is reserved &amp; confirmed.</div></div></div>
+      <div class="flow-step fade-in"><div class="flow-num">05</div><div class="flow-body"><div class="flow-title">Park &amp; Monitor</div><div class="flow-desc">Sensor confirms car is in correct slot. LED turns RED. App shows live parked status.</div></div></div>
+      <div class="flow-step fade-in"><div class="flow-num">06</div><div class="flow-body"><div class="flow-title">Exit &amp; Pay</div><div class="flow-desc">Scan exit QR → payment processed → barrier opens → LED turns GREEN again. Done!</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech">
+  <div class="section-inner">
+    <div class="section-tag fade-in">Technology Stack</div>
+    <h2 class="section-title fade-in">Built with Industry-Grade Tech</h2>
+    <p class="section-sub fade-in">Hardware to frontend — every layer powered by proven, production-ready technologies.</p>
+    <div class="tech-grid">
+      <div class="tech-card fade-in">
+        <div class="tech-cat">Hardware</div>
+        <ul class="tech-list">
+          <li>ESP8266 NodeMCU</li>
+          <li>HC-SR04 Ultrasonic ×2</li>
+          <li>RGB LED Indicators</li>
+          <li>QR Scanner Module</li>
+          <li>Servo Motor (Gate)</li>
+          <li>5V Power Supply</li>
+        </ul>
+      </div>
+      <div class="tech-card fade-in">
+        <div class="tech-cat">Firmware</div>
+        <ul class="tech-list">
+          <li>Arduino C++</li>
+          <li>MQTT Protocol</li>
+          <li>Wi-Fi Manager Lib</li>
+          <li>PubSubClient</li>
+          <li>ArduinoOTA (OTA Update)</li>
+          <li>LittleFS (Config Store)</li>
+        </ul>
+      </div>
+      <div class="tech-card fade-in">
+        <div class="tech-cat">Backend</div>
+        <ul class="tech-list">
+          <li>Node.js + Express</li>
+          <li>MongoDB / Firebase</li>
+          <li>Socket.io (Real-time)</li>
+          <li>JWT Authentication</li>
+          <li>Razorpay / Stripe API</li>
+          <li>QR Code Generator</li>
+        </ul>
+      </div>
+      <div class="tech-card fade-in">
+        <div class="tech-cat">Frontend</div>
+        <ul class="tech-list">
+          <li>React Native (Mobile)</li>
+          <li>React.js (Web)</li>
+          <li>Google Maps SDK</li>
+          <li>Tailwind CSS</li>
+          <li>Redux (State Mgmt)</li>
+          <li>Push Notifications (FCM)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADVANTAGES -->
+<section id="advantages">
+  <div class="section-inner">
+    <div class="section-tag fade-in">Why SmartPark</div>
+    <h2 class="section-title fade-in">Advantages of SmartPark</h2>
+    <p class="section-sub fade-in">Why this system transforms urban mobility and creates measurable impact for drivers, owners, and cities.</p>
+    <div class="adv-grid">
+      <div class="adv-card fade-in"><div class="adv-icon high">⏱️</div><div class="adv-body"><div class="adv-title">Time Saving</div><div class="adv-desc">Eliminates 15–20 min average search time per driver per trip.</div><span class="adv-impact impact-high">Impact: HIGH</span></div></div>
+      <div class="adv-card fade-in"><div class="adv-icon high">🌿</div><div class="adv-body"><div class="adv-title">Eco-Friendly</div><div class="adv-desc">Less idling means reduced CO₂ and NOₓ emissions — greener cities.</div><span class="adv-impact impact-high">Impact: HIGH</span></div></div>
+      <div class="adv-card fade-in"><div class="adv-icon high">💰</div><div class="adv-body"><div class="adv-title">Revenue for Owners</div><div class="adv-desc">Unused private land monetized; digital bookings reduce cash fraud.</div><span class="adv-impact impact-high">Impact: HIGH</span></div></div>
+      <div class="adv-card fade-in"><div class="adv-icon high">🚦</div><div class="adv-body"><div class="adv-title">Traffic Decongestion</div><div class="adv-desc">40% of city jams caused by parking-seekers — solved at root.</div><span class="adv-impact impact-high">Impact: HIGH</span></div></div>
+      <div class="adv-card fade-in"><div class="adv-icon med">📊</div><div class="adv-body"><div class="adv-title">Real-Time Data</div><div class="adv-desc">City planners get live occupancy heatmaps for smarter zoning decisions.</div><span class="adv-impact impact-med">Impact: MED</span></div></div>
+      <div class="adv-card fade-in"><div class="adv-icon med">🔐</div><div class="adv-body"><div class="adv-title">Security</div><div class="adv-desc">QR-only gate access prevents unauthorized parking and vehicle theft.</div><span class="adv-impact impact-med">Impact: MED</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- APP FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-tag fade-in">App Features</div>
+    <h2 class="section-title fade-in">Mobile &amp; Web App Features</h2>
+    <p class="section-sub fade-in">A seamless parking experience from search to exit — available on mobile and browser.</p>
+    <div class="feat-grid">
+      <div class="feat-card fade-in"><span class="feat-icon">🗺️</span><div class="feat-name">Live Map View</div><div class="feat-desc">Real-time map with colour-coded slots (green=free, red=full) updated live.</div></div>
+      <div class="feat-card fade-in"><span class="feat-icon">🔍</span><div class="feat-name">Smart Search</div><div class="feat-desc">Filter by distance, price, indoor/outdoor, and EV charging availability.</div></div>
+      <div class="feat-card fade-in"><span class="feat-icon">📅</span><div class="feat-name">Advance Booking</div><div class="feat-desc">Book up to 7 days in advance with slot-level precision and confirmation.</div></div>
+      <div class="feat-card fade-in"><span class="feat-icon">🔔</span><div class="feat-name">Notifications</div><div class="feat-desc">Reminders 15 min before booking, slot expiry and overstay warnings.</div></div>
+      <div class="feat-card fade-in"><span class="feat-icon">📋</span><div class="feat-name">Usage History</div><div class="feat-desc">Past bookings, digital receipts, and spending analytics dashboard.</div></div>
+      <div class="feat-card fade-in"><span class="feat-icon">💬</span><div class="feat-name">Support Chat</div><div class="feat-desc">In-app chat for disputes, lost QR codes, and gate access issues.</div></div>
+      <div class="feat-card fade-in"><span class="feat-icon">🌙</span><div class="feat-name">Dark Mode</div><div class="feat-desc">Full dark-mode UI optimised for night-time driving convenience.</div></div>
+      <div class="feat-card fade-in"><span class="feat-icon">💻</span><div class="feat-name">Web Portal</div><div class="feat-desc">All features accessible from browser — no app installation required.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- OWNER PORTAL -->
+<section id="owner">
+  <div class="section-inner">
+    <div class="section-tag fade-in">Owner Portal</div>
+    <h2 class="section-title fade-in">Register Your Parking Lot</h2>
+    <p class="section-sub fade-in">Parking owners can add their land, configure dynamic pricing, and manage bookings in real-time.</p>
+    <div class="owner-grid">
+      <div class="owner-steps fade-in">
+        <div class="owner-step"><div class="owner-step-num">1</div><div><div class="owner-step-title">Sign Up as Owner</div><div class="owner-step-desc">Register via app/web with identity verification (Aadhaar / Business certificate).</div></div></div>
+        <div class="owner-step"><div class="owner-step-num">2</div><div><div class="owner-step-title">Add Parking Land</div><div class="owner-step-desc">Enter location on map, upload photos, set total slot count and layout.</div></div></div>
+        <div class="owner-step"><div class="owner-step-num">3</div><div><div class="owner-step-title">Set Pricing Rules</div><div class="owner-step-desc">Define base rate/hr, peak-hour multiplier, daily cap, grace period.</div></div></div>
+        <div class="owner-step"><div class="owner-step-num">4</div><div><div class="owner-step-title">Connect IoT Device</div><div class="owner-step-desc">Pair ESP8266 device ID — sensors auto-report to this lot's dashboard.</div></div></div>
+        <div class="owner-step"><div class="owner-step-num">5</div><div><div class="owner-step-title">Go Live</div><div class="owner-step-desc">Admin approves → lot appears on user map with real-time availability.</div></div></div>
+      </div>
+      <div class="pricing-card fade-in">
+        <h3>Flexible Pricing Engine</h3>
+        <div class="price-item"><span class="price-label">Base Rate</span><span class="price-val">₹20 – ₹200 / hour</span></div>
+        <div class="price-item"><span class="price-label">Peak Hour Surge</span><span class="price-val">Up to 2× multiplier</span></div>
+        <div class="price-item"><span class="price-label">Daily Cap</span><span class="price-val">Max per 24-hr window</span></div>
+        <div class="price-item"><span class="price-label">Monthly Pass</span><span class="price-val">Subscription plans</span></div>
+        <div class="price-item"><span class="price-label">Grace Period</span><span class="price-val">First 5–15 min free</span></div>
+        <div class="price-item"><span class="price-label">Cancellation</span><span class="price-val">Auto refund within 30 min</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTERACTIVE DEMO -->
+<section id="demo">
+  <div class="section-inner">
+    <div class="section-tag fade-in" style="text-align:center">Interactive Demo</div>
+    <h2 class="section-title fade-in" style="text-align:center">Try SmartPark Live</h2>
+    <p class="section-sub fade-in" style="text-align:center;margin:0 auto 2.5rem">Click slots to toggle status, simulate a booking, and see the QR gate flow in action.</p>
+    <div class="demo-container fade-in">
+      <div class="demo-tabs">
+        <button class="demo-tab active" onclick="switchTab('slots')">Slot Monitor</button>
+        <button class="demo-tab" onclick="switchTab('booking')">Book a Slot</button>
+        <button class="demo-tab" onclick="switchTab('circuit')">IoT Circuit</button>
+      </div>
+
+      <!-- SLOTS PANEL -->
+      <div class="demo-panel active" id="panel-slots">
+        <div class="sim-grid" id="simSlots"></div>
+        <div class="sim-info">
+          <div class="sim-legend">
+            <div class="leg-item"><span class="leg-dot" style="background:var(--green)"></span>Free</div>
+            <div class="leg-item"><span class="leg-dot" style="background:var(--pink)"></span>Occupied</div>
+            <div class="leg-item"><span class="leg-dot" style="background:var(--yellow)"></span>Selected</div>
+          </div>
+          <div style="font-size:0.8rem;color:var(--muted)">Click any slot to toggle status</div>
+          <div style="font-size:0.85rem;font-weight:700;color:var(--teal)" id="simFree">8 Free</div>
+        </div>
+      </div>
+
+      <!-- BOOKING PANEL -->
+      <div class="demo-panel" id="panel-booking">
+        <div id="bookForm">
+          <div class="book-form">
+            <div class="form-group"><label>Select Slot</label>
+              <select id="bSlot"><option>A1 — Level 1</option><option>A3 — Level 1</option><option>B2 — Level 2</option><option>C1 — Level 3</option></select>
+            </div>
+            <div class="form-group"><label>Date</label><input type="date" id="bDate"></div>
+            <div class="form-group"><label>Start Time</label>
+              <select id="bTime"><option>08:00 AM</option><option>09:00 AM</option><option>10:00 AM</option><option>02:00 PM</option><option>06:00 PM</option></select>
+            </div>
+            <div class="form-group"><label>Duration</label>
+              <select id="bDur" onchange="calcPrice()"><option value="1">1 Hour</option><option value="2">2 Hours</option><option value="3">3 Hours</option><option value="4">4 Hours</option></select>
+            </div>
+          </div>
+          <div class="book-total">
+            <div><div style="font-size:0.75rem;color:var(--muted)">Total Amount</div><div class="amount" id="bookAmount">₹40</div></div>
+            <div style="text-align:right;font-size:0.8rem;color:var(--muted)"><div>Rate: ₹20/hr</div><div id="bookDurLabel">Duration: 2 hrs</div></div>
+          </div>
+          <button class="book-btn" onclick="confirmBooking()">Confirm Booking &amp; Generate QR</button>
+        </div>
+        <div class="book-success" id="bookSuccess">
+          <div class="qr-box">🔲</div>
+          <h3>Booking Confirmed!</h3>
+          <p style="margin-bottom:0.5rem">Your QR code is ready. Show at the gate.</p>
+          <p style="font-size:0.8rem;color:var(--teal);font-weight:700" id="bookSummary"></p>
+          <button style="margin-top:1.5rem;background:transparent;border:1.5px solid rgba(0,201,177,0.4);color:var(--teal);padding:0.6rem 1.5rem;border-radius:50px;cursor:pointer;font-weight:700" onclick="resetBooking()">Book Another Slot</button>
+        </div>
+      </div>
+
+      <!-- CIRCUIT PANEL -->
+      <div class="demo-panel" id="panel-circuit">
+        <div style="background:rgba(0,0,0,0.3);border-radius:16px;padding:1.5rem;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+            <div style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.25);border-radius:12px;padding:1rem;text-align:center;">
+              <div style="font-size:1.5rem;margin-bottom:0.5rem">🔧</div>
+              <div style="font-weight:700;font-size:0.9rem;color:var(--orange);margin-bottom:0.5rem">ESP8266 NodeMCU</div>
+              <div style="font-size:0.75rem;color:var(--muted)">GPIO16 TX · GPIO19 Trig A · GPIO20 Gate · GPIO21 Echo B · GPIO27 Trig B</div>
+            </div>
+            <div style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.25);border-radius:12px;padding:1rem;text-align:center;">
+              <div style="font-size:1.5rem;margin-bottom:0.5rem">📡</div>
+              <div style="font-weight:700;font-size:0.9rem;color:var(--cyan);margin-bottom:0.5rem">HC-SR04 Sensors ×2</div>
+              <div style="font-size:0.75rem;color:var(--muted)">VCC · TRIG · ECHO · GND — ultrasonic vehicle detection for Slot A &amp; Slot B</div>
+            </div>
+            <div style="background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);border-radius:12px;padding:1rem;text-align:center;">
+              <div style="font-size:1.5rem;margin-bottom:0.5rem">🔲</div>
+              <div style="font-weight:700;font-size:0.9rem;color:var(--green);margin-bottom:0.5rem">QR Scanner Module</div>
+              <div style="font-size:0.75rem;color:var(--muted)">Data TX via RX GPIO16 · triggers servo gate on valid QR scan at entry/exit</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div style="background:rgba(123,47,190,0.1);border:1px solid rgba(123,47,190,0.25);border-radius:12px;padding:1rem;">
+              <div style="font-weight:700;color:var(--purple);margin-bottom:0.75rem;font-size:0.85rem">Servo Gate Control</div>
+              <div style="font-size:0.78rem;color:var(--muted);line-height:1.7">GPIO20 controls servo motor · Opens on valid QR scan · Closes after vehicle passes · Auto-timeout after 10s</div>
+            </div>
+            <div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:1rem;">
+              <div style="font-weight:700;color:var(--yellow);margin-bottom:0.75rem;font-size:0.85rem">Wire Legend</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.3rem;font-size:0.75rem">
+                <div style="color:#FFD700">● Yellow — Data TX</div>
+                <div style="color:#FF8C00">● Orange — RX/Trig</div>
+                <div style="color:#FF4444">● Red — VCC Power</div>
+                <div style="color:#00E676">● Green — Echo/Signal</div>
+                <div style="color:#888">● Black — GND</div>
+                <div style="color:var(--cyan)">● Blue — Wi-Fi/MQTT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section id="roadmap">
+  <div class="section-inner">
+    <div class="section-tag fade-in">Future Scope</div>
+    <h2 class="section-title fade-in">Roadmap Beyond Hackathon</h2>
+    <p class="section-sub fade-in">Scaling SmartPark from prototype to a full smart-city infrastructure platform.</p>
+    <div class="roadmap-grid">
+      <div class="road-card fade-in"><span class="road-badge">Phase 2</span><div class="road-title">AI Prediction Engine</div><div class="road-desc">ML model predicts peak hours and pre-fills likely available slots based on historical occupancy patterns.</div></div>
+      <div class="road-card fade-in"><span class="road-badge">Phase 2</span><div class="road-title">Camera-Based Detection</div><div class="road-desc">Replace ultrasonic with CCTV + computer vision model for better accuracy and multi-slot coverage.</div></div>
+      <div class="road-card fade-in"><span class="road-badge">Phase 3</span><div class="road-title">EV Charging Integration</div><div class="road-desc">Reserve EV charging bays, track charge percentage, and auto-bill per kWh alongside parking fee.</div></div>
+      <div class="road-card fade-in"><span class="road-badge">Phase 3</span><div class="road-title">Smart City Open API</div><div class="road-desc">Share live occupancy data with municipal traffic management systems via open city APIs.</div></div>
+      <div class="road-card fade-in"><span class="road-badge">Phase 4</span><div class="road-title">Autonomous Vehicle Ready</div><div class="road-desc">ANPR (license plate reading) for self-driving cars to park autonomously without any app interaction.</div></div>
+      <div class="road-card fade-in"><span class="road-badge">Phase 4</span><div class="road-title">Multi-City SaaS Expansion</div><div class="road-desc">SaaS model — any city, any parking lot owner globally can onboard in under 1 hour.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">SmartPark</div>
+  <div class="footer-sub">Because Every Second Counts — Hackathon 2025</div>
+  <div class="footer-tags">
+    <span class="footer-tag">IoT Sensors</span>
+    <span class="footer-tag">Real-Time App</span>
+    <span class="footer-tag">QR Gate</span>
+    <span class="footer-tag">Owner Portal</span>
+    <span class="footer-tag">Smart Booking</span>
+    <span class="footer-tag">AI-Ready</span>
+  </div>
+  <div class="footer-copy">Built with ♥ using ESP8266 · HC-SR04 · React Native · Node.js · Firebase</div>
+</footer>
+
+<script>
+// HERO SLOTS ANIMATION
+const heroSlotData = [
+  {id:'A1',st:'free'},{id:'A2',st:'occ'},{id:'A3',st:'free'},
+  {id:'B1',st:'booked'},{id:'B2',st:'free'},{id:'B3',st:'occ'}
+];
+function renderHeroSlots(){
+  const container = document.getElementById('heroSlots');
+  container.innerHTML = '';
+  let free=0, occ=0;
+  heroSlotData.forEach(s=>{
+    const d = document.createElement('div');
+    d.className = 'slot '+s.st;
+    const icons = {free:'🟢',occ:'🔴',booked:'🟡'};
+    const labels = {free:'FREE',occ:'OCC.',booked:'BOOKED'};
+    d.innerHTML = `<div class="slot-icon">${icons[s.st]}</div><div class="slot-id">${s.id}</div><div class="slot-status">${labels[s.st]}</div>`;
+    container.appendChild(d);
+    if(s.st==='free') free++; else occ++;
+  });
+  document.getElementById('freeCount').textContent = free;
+  document.getElementById('occCount').textContent = occ;
+}
+renderHeroSlots();
+
+setInterval(()=>{
+  const idx = Math.floor(Math.random()*heroSlotData.length);
+  const states = ['free','occ','booked'];
+  heroSlotData[idx].st = states[Math.floor(Math.random()*states.length)];
+  renderHeroSlots();
+}, 2000);
+
+// SIMULATOR
+const simData = Array.from({length:12},(_, i)=>({id:`${String.fromCharCode(65+Math.floor(i/3))}${(i%3)+1}`,occ:Math.random()>.6}));
+function renderSim(){
+  const c = document.getElementById('simSlots');
+  c.innerHTML = '';
+  let free=0;
+  simData.forEach((s,i)=>{
+    const d = document.createElement('div');
+    d.className = 'sim-slot '+(s.occ?'occupied':'free');
+    d.innerHTML = `<div class="sim-slot-ico">${s.occ?'🚗':'✅'}</div><div class="sim-slot-id">${s.id}</div>`;
+    d.onclick = ()=>{ s.occ = !s.occ; renderSim(); };
+    c.appendChild(d);
+    if(!s.occ) free++;
+  });
+  document.getElementById('simFree').textContent = free+' Free';
+}
+renderSim();
+
+// TABS
+function switchTab(name){
+  document.querySelectorAll('.demo-tab').forEach((t,i)=>t.classList.remove('active'));
+  document.querySelectorAll('.demo-panel').forEach(p=>p.classList.remove('active'));
+  const tabs = ['slots','booking','circuit'];
+  document.querySelectorAll('.demo-tab')[tabs.indexOf(name)].classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+}
+
+// BOOKING
+document.getElementById('bDate').valueAsDate = new Date();
+function calcPrice(){
+  const dur = parseInt(document.getElementById('bDur').value);
+  const total = dur * 20;
+  document.getElementById('bookAmount').textContent = '₹'+total;
+  document.getElementById('bookDurLabel').textContent = 'Duration: '+dur+' hr'+(dur>1?'s':'');
+}
+calcPrice();
+
+function confirmBooking(){
+  const slot = document.getElementById('bSlot').value;
+  const date = document.getElementById('bDate').value;
+  const time = document.getElementById('bTime').value;
+  const dur = document.getElementById('bDur').value;
+  const amount = document.getElementById('bookAmount').textContent;
+  document.getElementById('bookSummary').textContent = slot+' · '+date+' · '+time+' · '+dur+'hr · '+amount;
+  document.getElementById('bookForm').style.display='none';
+  document.getElementById('bookSuccess').style.display='block';
+}
+function resetBooking(){
+  document.getElementById('bookForm').style.display='block';
+  document.getElementById('bookSuccess').style.display='none';
+}
+
+// SCROLL ANIMATION
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:0.1});
+document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+
+// MOBILE MENU
+let menuOpen = false;
+function toggleMenu(){
+  menuOpen = !menuOpen;
+  const links = document.querySelector('.nav-links');
+  if(menuOpen){
+    links.style.display='flex';
+    links.style.flexDirection='column';
+    links.style.position='absolute';
+    links.style.top='64px';
+    links.style.left='0';
+    links.style.width='100%';
+    links.style.background='rgba(10,14,42,0.98)';
+    links.style.padding='1rem 2rem';
+    links.style.gap='1rem';
+    links.style.borderBottom='1px solid rgba(0,201,177,0.2)';
+  } else {
+    links.style.display='none';
+  }
+}
+</script>
+</body>
+</html>
